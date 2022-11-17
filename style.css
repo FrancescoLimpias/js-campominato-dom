@@ -31,6 +31,7 @@ header {
 }
 
 main {
+    position: relative;
     background-color: #415643;
     height: 700px;
 
@@ -95,14 +96,33 @@ main {
 }
 
 /* Bomb */
-.cell.revealed.bomb {
+.cell.bomb {
     background-color: red;
 }
-.cell.revealed.bomb span::after {
+.cell.bomb span::after {
     content: '\1F4A3';
 }
 
 /* Flagged */
 .cell.flagged span::after{
     content: '\1F6A9';
+}
+
+/* SCORE VIEW */
+#score-view{
+    position: absolute;
+    display: none;
+
+    width: 100%;
+    height: 200px;
+
+    background-color: rgba(0, 0, 0, 0.5);
+
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#score-view.active{
+    display: flex;
 }

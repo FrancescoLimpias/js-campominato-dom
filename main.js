@@ -1,6 +1,12 @@
-// Game
+// Game Configuration
 let cellsN = 100;
+let bombsN = 16;
 let difficulty = "easy";
+
+// Game Data
+let pause = false;
+let score = 0;
+let bombs = [];
 let timer, timerSeconds;
 
 // References
@@ -8,6 +14,9 @@ const difficultySelector = document.getElementById("input-difficulty");
 const startButton = document.getElementById("button-start");
 const timerElement = document.getElementById("timer");
 const gridElement = document.getElementById("grid");
+const scoreViewElement = document.getElementById("score-view");
+const resultElement = document.getElementById("result");
+const scoreElement = document.getElementById("score");
 
 // Link UI with JS
 difficultySelector.addEventListener("click", updateDifficulty);
@@ -32,10 +41,40 @@ function updateDifficulty() {
 // Game logics
 function startGame() {
     generateGrid();
+    resetTimer();
+    score = 0;
+    scoreViewElement.classList.remove("active");
+    
+    resumeGame();
+}
+function finishGame(win) {
+
+    // Stop game
+    stopGame();
+
+    // Show Bombs
+    for (let i = 0; i < bombs.length; i++) {
+        gridElement.children[bombs[i] - 1].classList.add("bomb", "revealed");
+    }
+
+    // Display results
+    scoreViewElement.classList.add("active");
+    if(win){
+        resultElement.innerHTML = "vinto!";
+    } else {
+        resultElement.innerHTML = "perso";
+    }
+    scoreElement.innerHTML = score;
+
+}
+
+function resumeGame() {
     startTimer();
+    pause = false;
 }
 function stopGame() {
     stopTimer();
+    pause = true;
 }
 
 // Grid logics
@@ -44,7 +83,28 @@ function generateGrid() {
     // Clear grid
     clearGrid();
 
-    // Create a reusable mould
+    // Generate available cells array
+    let availableCells = [];
+    for (let i = 1; i <= cellsN; i++) {
+        availableCells.push(i);
+    }
+
+    // Generate bomb array
+    bombs = [];
+    for (let i = 1; i <= bombsN; i++) {
+
+        // Take one random available cell index
+        const randomAvailableCellIndex = Math.round(1 + (Math.random() * (availableCells.length - 2)));
+
+        // Look for the cell index it is holding and store it in the bombs array
+        bombs.push(availableCells[randomAvailableCellIndex]);
+
+        // Remove the bomb cell from the available cells
+        availableCells.splice(randomAvailableCellIndex, 1);
+
+    }
+
+    // Create a reusable cell mould
     const mouldCell = document.createElement("div");
     mouldCell.classList.add("cell", difficulty);
 
@@ -60,6 +120,12 @@ function generateGrid() {
         // Add click response
         cell.addEventListener("click", function () {
 
+            // Check if game is active
+            if(pause){
+                return;
+            }
+
+            // Revealing logic
             if (!cell.classList.contains("revealed")) {
 
                 // Rivela la cella
@@ -69,8 +135,19 @@ function generateGrid() {
             } else {
 
                 // Cell already revealed
-                console.log(`Cella già rivelata! [${cellN}]`)
+                console.log(`Cella già rivelata! [${cellN}]`);
+                return;
 
+            }
+
+            // Check if cell is a bomb
+            if (bombs.includes(cellN)) {
+                finishGame(false);
+            } else {
+                score++;
+                if(score == cellsN - bombsN){
+                    finishGame(true);
+                }
             }
         });
 
@@ -86,28 +163,34 @@ function clearGrid() {
 }
 
 // Timer logics
-function startTimer() {
+function resetTimer() {
 
     // Clear eventual previous timer
     if (timer) {
         stopTimer();
     }
 
-    // Update timer counters
+    // Reset counter
     timerSeconds = 0;
-    timer = setInterval(function () {
-        timerSeconds++;
-        updateWatch();
-    }, 1000);
 
     // Display new timer
-    updateWatch();
+    updateTimer();
+
 }
-function updateWatch() {
-    const shownSeconds = (timerSeconds + 60) % 60;
-    const shownMinutes = parseInt(timerSeconds / 60);
-    timerElement.innerHTML = `${shownMinutes}:${shownSeconds}`;
+function startTimer() {
+
+    // Start counting
+    timer = setInterval(function () {
+        timerSeconds++;
+        updateTimer();
+    }, 1000);
+
 }
 function stopTimer() {
     clearInterval(timer);
+}
+function updateTimer() {
+    const shownSeconds = (timerSeconds + 60) % 60;
+    const shownMinutes = parseInt(timerSeconds / 60);
+    timerElement.innerHTML = `${shownMinutes}:${shownSeconds}`;
 }
